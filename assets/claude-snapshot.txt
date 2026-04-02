@@ -1,5 +1,5 @@
 === VERSION ===
-2.1.81 (Claude Code)
+2.1.90 (Claude Code)
 
 === HELP ===
 Usage: claude [options] [command] [prompt]
@@ -34,6 +34,7 @@ Options:
   --from-pr [value]                                 Resume a session linked to a PR by PR number/URL, or open interactive picker with optional search term
   -h, --help                                        Display help for command
   --ide                                             Automatically connect to IDE on startup if exactly one valid IDE is available
+  --include-hook-events                             Include all hook lifecycle events in the output stream (only works with --output-format=stream-json)
   --include-partial-messages                        Include partial message chunks as they arrive (only works with --print and --output-format=stream-json)
   --input-format <format>                           Input format (only works with --print): "text" (default), or "stream-json" (realtime streaming input) (choices: "text", "stream-json")
   --json-schema <schema>                            JSON Schema for structured output validation. Example: {"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}
@@ -65,9 +66,10 @@ Commands:
   agents [options]                                  List configured agents
   auth                                              Manage authentication
   auto-mode                                         Inspect auto mode classifier configuration
-  doctor                                            Check the health of your Claude Code auto-updater
+  doctor                                            Check the health of your Claude Code auto-updater. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.
   install [options] [target]                        Install Claude Code native build. Use [target] to specify version (stable, latest, or specific version)
   mcp                                               Configure and manage MCP servers
   plugin|plugins                                    Manage Claude Code plugins
   setup-token                                       Set up a long-lived authentication token (requires Claude subscription)
   update|upgrade                                    Check for updates and install if available
+LAST_RELEASE=v2.1.90
