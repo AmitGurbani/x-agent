@@ -10,97 +10,75 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Job 1: Check GitHub Releases API for new versions (no CLI install needed)
-  release-watch:
+  # Job 1: Per-CLI — install, snapshot diff, and check GitHub Releases
+  check-cli:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - cli: codex
+            install: "npm install -g @openai/codex"
             repo: openai/codex
           - cli: claude
+            install: "npm install -g @anthropic-ai/claude-code"
             repo: anthropics/claude-code
           - cli: gemini
+            install: "npm install -g @google/gemini-cli"
             repo: google-gemini/gemini-cli
-          # Cursor and Junie don't have public GitHub Releases — tracked via snapshot-diff only
-    outputs:
-      changed: ${{ steps.check.outputs.changed }}
+          - cli: cursor
+            install: "curl https://cursor.com/install -fsS | bash"
+            repo: ""
+          - cli: junie
+            install: "curl -fsSL https://junie.jetbrains.com/install.sh | bash"
+            repo: ""
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check latest release
-        id: check
+      - name: Install CLI
+        run: ${{ matrix.install }} 2>/dev/null || echo "SKIP: ${{ matrix.cli }} install failed"
+        continue-on-error: true
+
+      - name: Run snapshot detection
+        id: detect
+        run: |
+          source ~/.bashrc 2>/dev/null || source ~/.profile 2>/dev/null || true
+          chmod +x scripts/detect-updates.sh
+          if ./scripts/detect-updates.sh ${{ matrix.cli }}; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Check GitHub Releases
+        if: matrix.repo != ''
+        id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LATEST=$(gh api repos/${{ matrix.repo }}/releases/latest --jq '.tag_name' 2>/dev/null || echo "unknown")
           SNAPSHOT_FILE="assets/${{ matrix.cli }}-snapshot.txt"
           STORED=$(grep -m1 'LAST_RELEASE=' "$SNAPSHOT_FILE" 2>/dev/null | cut -d= -f2 || echo "none")
-          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
-          echo "stored=$STORED" >> "$GITHUB_OUTPUT"
           if [ "$LATEST" != "$STORED" ] && [ "$LATEST" != "unknown" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            sed -i '/^LAST_RELEASE=/d' "$SNAPSHOT_FILE" 2>/dev/null || true
+            echo "LAST_RELEASE=$LATEST" >> "$SNAPSHOT_FILE"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
         continue-on-error: true
 
-      - name: Upload release info
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          echo "${{ matrix.cli }}=${{ steps.check.outputs.latest }}" >> release-changes-${{ matrix.cli }}.txt
-          echo "stored_${{ matrix.cli }}=${{ steps.check.outputs.stored }}" >> release-changes-${{ matrix.cli }}.txt
-
-      - uses: actions/upload-artifact@v4
-        if: steps.check.outputs.changed == 'true'
+      - name: Upload snapshot
+        if: steps.detect.outputs.changed == 'true' || steps.release.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.cli }}
-          path: release-changes-${{ matrix.cli }}.txt
+          name: snapshot-${{ matrix.cli }}
+          path: assets/${{ matrix.cli }}-snapshot.txt
 
-  # Job 2: Run CLIs locally to diff --version/--help/--list-models output
-  # Uses self-hosted runner with CLIs pre-installed, or falls back gracefully
-  snapshot-diff:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install CLIs (best-effort)
-        run: |
-          # Claude Code
-          npm install -g @anthropic-ai/claude-code 2>/dev/null || echo "SKIP: claude install failed"
-          # Codex
-          npm install -g @openai/codex 2>/dev/null || echo "SKIP: codex install failed"
-          # Gemini CLI
-          npm install -g @google/gemini-cli 2>/dev/null || echo "SKIP: gemini install failed"
-          # Cursor Agent CLI
-          curl https://cursor.com/install -fsS | bash 2>/dev/null || echo "SKIP: cursor install failed"
-          # Junie CLI
-          curl -fsSL https://junie.jetbrains.com/install.sh | bash 2>/dev/null || echo "SKIP: junie install failed"
-        continue-on-error: true
-
-      - name: Run snapshot detection
-        id: detect
-        run: |
-          # Source profile to pick up PATH changes from curl installers
-          source ~/.bashrc 2>/dev/null || source ~/.profile 2>/dev/null || true
-          chmod +x scripts/detect-updates.sh
-          if ./scripts/detect-updates.sh; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        if: steps.detect.outputs.changed == 'true'
-        with:
-          name: snapshots
-          path: assets/*-snapshot.txt
-
-  # Job 3: Open PRs for any changed CLIs
+  # Job 2: Collect changes and open a single PR
   open-pr:
-    needs: [release-watch, snapshot-diff]
+    needs: check-cli
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -114,26 +92,9 @@ jobs:
       - name: Apply snapshot updates
         run: |
           shopt -s nullglob
-          # Copy any updated snapshots
           for f in *-snapshot.txt; do
             [ -f "$f" ] && cp "$f" "assets/$f"
           done
-          # Apply release version updates (iterate all per-CLI files)
-          for rcf in release-changes-*.txt; do
-            [ -f "$rcf" ] || continue
-            while IFS='=' read -r key value; do
-              case "$key" in
-                stored_*) continue ;;
-                *)
-                  CLI="$key"
-                  SNAPSHOT_FILE="assets/${CLI}-snapshot.txt"
-                  sed -i '/^LAST_RELEASE=/d' "$SNAPSHOT_FILE" 2>/dev/null || true
-                  echo "LAST_RELEASE=$value" >> "$SNAPSHOT_FILE"
-                  ;;
-              esac
-            done < "$rcf"
-          done
-        continue-on-error: true
 
       - name: Check for changes and create PR
         env:
@@ -148,11 +109,9 @@ jobs:
             exit 0
           fi
 
-          # Determine which CLIs changed
           CHANGED_CLIS=$(git diff --name-only assets/ | sed 's|assets/||;s|-snapshot.txt||' | sort -u)
           BRANCH="cli-update/weekly"
 
-          # Check for existing open PR
           EXISTING=$(gh pr list --label "cli-update" --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
 
           git checkout -B "$BRANCH" origin/"$DEFAULT_BRANCH"
