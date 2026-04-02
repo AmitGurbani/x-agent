@@ -2,43 +2,51 @@
 
 Let your AI coding agent talk to other AI coding agents.
 
-x-agent is a set of [agentskills.io](https://agentskills.io) skills that enable any AI CLI tool — Codex, Cursor, Claude Code, Gemini CLI, Junie — to delegate tasks to or get second opinions from the others. Install it once, and your agent gains the ability to call any of the other four.
+x-agent is a set of [agentskills.io](https://agentskills.io) skills that enable any AI CLI tool — Codex, Cursor, Claude
+Code, Gemini CLI, Junie — to delegate tasks to or get second opinions from the others. Install it once, and your agent
+gains the ability to call any of the other four.
 
 ## Why
 
-Every model has blind spots. A single model reviewing its own output is like proofreading your own writing — you miss things. x-agent fixes this by letting your agent bring in a different model family for a genuine second opinion.
+Every model has blind spots. A single model reviewing its own output is like proofreading your own writing — you miss
+things. x-agent fixes this by letting your agent bring in a different model family for a genuine second opinion.
 
-- **Catch what one model misses.** Claude might miss a concurrency issue that Gemini catches. Codex might spot an API misuse that Cursor overlooks. Cross-model validation surfaces real problems, not just style preferences.
-- **Use the right model for the job.** Some models are better at reasoning about architecture, others at writing code fast. Instead of being locked into one, delegate the task to whichever model fits best.
-- **No copy-paste workflow.** Without x-agent, cross-validating means manually copying context between terminals. x-agent handles context gathering, prompt construction, model selection, and result synthesis automatically.
+- **Catch what one model misses.** Claude might miss a concurrency issue that Gemini catches. Codex might spot an API
+  misuse that Cursor overlooks. Cross-model validation surfaces real problems, not just style preferences.
+- **Use the right model for the job.** Some models are better at reasoning about architecture, others at writing code
+  fast. Instead of being locked into one, delegate the task to whichever model fits best.
+- **No copy-paste workflow.** Without x-agent, cross-validating means manually copying context between terminals.
+  x-agent handles context gathering, prompt construction, model selection, and result synthesis automatically.
 
 ## When to use it
 
-| Situation | Mode | What happens |
-|-----------|------|-------------|
-| You finished a plan and want a sanity check before building | **Validation** | Sends the plan to a different model family, returns a structured comparison with agreement, counterpoints, and synthesis |
-| You have a PR and want a review from a different perspective | **Validation** | Gathers the diff, sends it to the target CLI, presents findings you can act on |
-| You want a task done by a specific model | **Delegation** | Hands off the task entirely — the target CLI does the work and returns the result |
-| Your current model is stuck on a bug | **Delegation** | Routes the problem to a different model that might approach it differently |
-| You want to compare how two models would implement something | **Validation** | Get the second model's approach, then see where the two agree and diverge |
+| Situation                                                    | Mode           | What happens                                                                                                             |
+|--------------------------------------------------------------|----------------|--------------------------------------------------------------------------------------------------------------------------|
+| You finished a plan and want a sanity check before building  | **Validation** | Sends the plan to a different model family, returns a structured comparison with agreement, counterpoints, and synthesis |
+| You have a PR and want a review from a different perspective | **Validation** | Gathers the diff, sends it to the target CLI, presents findings you can act on                                           |
+| You want a task done by a specific model                     | **Delegation** | Hands off the task entirely — the target CLI does the work and returns the result                                        |
+| Your current model is stuck on a bug                         | **Delegation** | Routes the problem to a different model that might approach it differently                                               |
+| You want to compare how two models would implement something | **Validation** | Get the second model's approach, then see where the two agree and diverge                                                |
 
-You **don't** need x-agent when you're happy with your current model's output and don't need a second perspective. It adds a round-trip to another CLI, so use it when the extra signal is worth the time.
+You **don't** need x-agent when you're happy with your current model's output and don't need a second perspective. It
+adds a round-trip to another CLI, so use it when the extra signal is worth the time.
 
 ## Supported CLIs
 
-| CLI | Command | Default Model | Notes |
-|-----|---------|---------------|-------|
-| OpenAI Codex | `codex` | `o4-mini` | OpenAI models only |
-| Cursor Agent | `agent` | `composer-2-fast` | Multi-provider (OpenAI, Anthropic, Google, xAI) |
-| Claude Code | `claude` | `sonnet` | Anthropic models |
-| Gemini CLI | `gemini` | `gemini-2.5-pro` | Google models, auto-routing |
-| Junie | `junie` | Junie default | LLM-agnostic, BYOK support |
+| CLI          | Command  | Default Model     | Notes                                           |
+|--------------|----------|-------------------|-------------------------------------------------|
+| OpenAI Codex | `codex`  | `o4-mini`         | OpenAI models only                              |
+| Cursor Agent | `agent`  | `composer-2-fast` | Multi-provider (OpenAI, Anthropic, Google, xAI) |
+| Claude Code  | `claude` | `sonnet`          | Anthropic models                                |
+| Gemini CLI   | `gemini` | `gemini-2.5-pro`  | Google models, auto-routing                     |
+| Junie        | `junie`  | Junie default     | LLM-agnostic, BYOK support                      |
 
 ## How to use it
 
 The skill infers what to do from your natural language. No flags or special syntax needed.
 
-**Validation** — words like "review", "check", "second opinion", "validate", "compare" trigger validation mode. Your agent gathers context, sends it to the target CLI, and presents a structured comparison.
+**Validation** — words like "review", "check", "second opinion", "validate", "compare" trigger validation mode. Your
+agent gathers context, sends it to the target CLI, and presents a structured comparison.
 
 ```
 Review my implementation plan using Cursor
@@ -46,7 +54,8 @@ Get a second opinion on this PR from Gemini
 Validate this architecture with Claude
 ```
 
-**Delegation** — words like "fix", "implement", "build", "refactor", "create" trigger delegation mode. The task is handed off entirely to the target CLI.
+**Delegation** — words like "fix", "implement", "build", "refactor", "create" trigger delegation mode. The task is
+handed off entirely to the target CLI.
 
 ```
 Use Codex to implement the retry logic
@@ -64,17 +73,22 @@ Use opus to validate my approach via Claude
 **What happens under the hood:**
 
 1. Infers mode (validation or delegation) from your prompt
-2. Queries the target CLI for available models, classifies them into tiers (flagship reasoning, code-specialized, balanced, fast/cheap)
-3. Picks a model — for validation, prefers a different model family than your current agent to get a genuine second opinion
+2. Queries the target CLI for available models, classifies them into tiers (flagship reasoning, code-specialized,
+   balanced, fast/cheap)
+3. Picks a model — for validation, prefers a different model family than your current agent to get a genuine second
+   opinion
 4. Gathers relevant context (diffs, files, plans) based on what you're asking about
-5. Constructs a prompt, writes it to a temp file (safe transport), and runs the target CLI in non-interactive mode with a 120s timeout
-6. Presents results — validation gets a structured template (second opinion, agreement, counterpoints, synthesis); delegation returns the output directly
+5. Constructs a prompt, writes it to a temp file (safe transport), and runs the target CLI in non-interactive mode with
+   a 120s timeout
+6. Presents results — validation gets a structured template (second opinion, agreement, counterpoints, synthesis);
+   delegation returns the output directly
 
 ## Installation
 
 ### Quick Install (recommended)
 
-Install using [skills.sh](https://skills.sh/) — works with Claude Code, GitHub Copilot, Cursor, Cline, Windsurf, and 15+ other agents:
+Install using [skills.sh](https://skills.sh/) — works with Claude Code, GitHub Copilot, Cursor, Cline, Windsurf, and 15+
+other agents:
 
 ```bash
 npx skills add darshitpp/x-agent
@@ -100,7 +114,8 @@ mkdir -p .claude/skills
 git clone https://github.com/darshitpp/x-agent.git .claude/skills/x-agent
 ```
 
-After installation, the skills appear automatically in Claude Code's available skills list. Each CLI has its own skill (`codex`, `cursor`, `claude`, `gemini`, `junie`) that triggers based on context.
+After installation, the skills appear automatically in Claude Code's available skills list. Each CLI has its own skill (
+`codex`, `cursor`, `claude`, `gemini`, `junie`) that triggers based on context.
 
 To update later:
 
@@ -111,7 +126,8 @@ git pull
 
 ### Other Agents
 
-This skill follows the [agentskills.io](https://agentskills.io) open standard and works with any compatible agent. See [Usage with Different Agents](#usage-with-different-agents) below for agent-specific setup.
+This skill follows the [agentskills.io](https://agentskills.io) open standard and works with any compatible agent.
+See [Usage with Different Agents](#usage-with-different-agents) below for agent-specific setup.
 
 ## Directory Structure
 
@@ -160,7 +176,8 @@ Trigger manually anytime from **Actions > Sync CLI Updates > Run workflow**.
 ## Adding a New CLI
 
 1. Create `<cli-name>/SKILL.md` following the existing pattern (copy any existing one)
-2. Create `references/cli-<cli-name>.md` with the four required sections (Identity, Model Selection, Invocation Template, Version Matrix)
+2. Create `references/cli-<cli-name>.md` with the four required sections (Identity, Model Selection, Invocation
+   Template, Version Matrix)
 3. Add the CLI to `scripts/detect-updates.sh` arrays (`CLIS`, `CLI_COMMANDS`, `LIST_MODELS_SUPPORTED`)
 4. Add the CLI to the GitHub Actions workflow matrix in `sync-cli-updates.yml`
 5. Run `scripts/detect-updates.sh <cli-name>` to generate the initial snapshot
@@ -168,36 +185,39 @@ Trigger manually anytime from **Actions > Sync CLI Updates > Run workflow**.
 
 ## Usage with Different Agents
 
-This skill follows the [agentskills.io](https://agentskills.io) open standard. Each CLI has its own skill directory with a `SKILL.md` entry point.
+This skill follows the [agentskills.io](https://agentskills.io) open standard. Each CLI has its own skill directory with
+a `SKILL.md` entry point.
 
 ### Claude Code
 
-| Scope                   | Path                          |
-|-------------------------|-------------------------------|
-| Personal (all projects) | `~/.claude/skills/x-agent/`   |
-| Project                 | `.claude/skills/x-agent/`     |
+| Scope                   | Path                        |
+|-------------------------|-----------------------------|
+| Personal (all projects) | `~/.claude/skills/x-agent/` |
+| Project                 | `.claude/skills/x-agent/`   |
 
-**Invoke:** Ask naturally ("get a second opinion from Cursor") or explicitly with `/codex`, `/cursor`, `/claude`, `/gemini`, `/junie`. Claude loads the skill automatically when relevant.
+**Invoke:** Ask naturally ("get a second opinion from Cursor") or explicitly with `/codex`, `/cursor`, `/claude`,
+`/gemini`, `/junie`. Claude loads the skill automatically when relevant.
 
 [Claude Code skills docs](https://code.claude.com/docs/en/skills)
 
 ### Cursor
 
-| Scope         | Path                                                               |
-|---------------|--------------------------------------------------------------------|
-| User (global) | `~/.cursor/skills/x-agent/`                                       |
-| Project       | `.cursor/skills/x-agent/` or `.agents/skills/x-agent/`            |
+| Scope         | Path                                                   |
+|---------------|--------------------------------------------------------|
+| User (global) | `~/.cursor/skills/x-agent/`                            |
+| Project       | `.cursor/skills/x-agent/` or `.agents/skills/x-agent/` |
 
-**Invoke:** Ask naturally or use the skill name in chat. Cursor auto-discovers skills at startup. You can also install from GitHub via **Settings > Rules > Add Rule > Remote Rule (Github)**.
+**Invoke:** Ask naturally or use the skill name in chat. Cursor auto-discovers skills at startup. You can also install
+from GitHub via **Settings > Rules > Add Rule > Remote Rule (Github)**.
 
 [Cursor skills docs](https://cursor.com/docs/context/skills)
 
 ### GitHub Copilot / VS Code
 
-| Scope    | Path                                                                    |
-|----------|-------------------------------------------------------------------------|
-| Personal | `~/.copilot/skills/x-agent/` or `~/.claude/skills/x-agent/`            |
-| Project  | `.github/skills/x-agent/` or `.claude/skills/x-agent/`                 |
+| Scope    | Path                                                        |
+|----------|-------------------------------------------------------------|
+| Personal | `~/.copilot/skills/x-agent/` or `~/.claude/skills/x-agent/` |
+| Project  | `.github/skills/x-agent/` or `.claude/skills/x-agent/`      |
 
 **Invoke:** Copilot auto-discovers and loads skills when relevant to the task.
 
@@ -205,11 +225,11 @@ This skill follows the [agentskills.io](https://agentskills.io) open standard. E
 
 ### OpenAI Codex
 
-| Scope   | Path                               |
-|---------|-------------------------------------|
-| User    | `~/.agents/skills/x-agent/`        |
-| Project | `.agents/skills/x-agent/`          |
-| System  | `/etc/codex/skills/x-agent/`       |
+| Scope   | Path                         |
+|---------|------------------------------|
+| User    | `~/.agents/skills/x-agent/`  |
+| Project | `.agents/skills/x-agent/`    |
+| System  | `/etc/codex/skills/x-agent/` |
 
 **Invoke:** Reference with `/skills` or `$` mention syntax, or let Codex auto-select based on task context.
 
@@ -217,10 +237,10 @@ This skill follows the [agentskills.io](https://agentskills.io) open standard. E
 
 ### Goose
 
-| Scope   | Path                                                                                |
-|---------|-------------------------------------------------------------------------------------|
-| Global  | `~/.config/goose/skills/x-agent/` or `~/.config/agents/skills/x-agent/`            |
-| Project | `.goose/skills/x-agent/` or `.agents/skills/x-agent/`                              |
+| Scope   | Path                                                                    |
+|---------|-------------------------------------------------------------------------|
+| Global  | `~/.config/goose/skills/x-agent/` or `~/.config/agents/skills/x-agent/` |
+| Project | `.goose/skills/x-agent/` or `.agents/skills/x-agent/`                   |
 
 **Invoke:** Ask "Use the x-agent skill" or let Goose auto-activate when relevant.
 
@@ -228,20 +248,21 @@ This skill follows the [agentskills.io](https://agentskills.io) open standard. E
 
 ### Roo Code
 
-| Scope   | Path                                                                    |
-|---------|-------------------------------------------------------------------------|
-| Global  | `~/.roo/skills/x-agent/` or `~/.agents/skills/x-agent/`               |
-| Project | `.roo/skills/x-agent/` or `.agents/skills/x-agent/`                   |
+| Scope   | Path                                                    |
+|---------|---------------------------------------------------------|
+| Global  | `~/.roo/skills/x-agent/` or `~/.agents/skills/x-agent/` |
+| Project | `.roo/skills/x-agent/` or `.agents/skills/x-agent/`     |
 
-**Invoke:** Roo indexes all skills at startup and auto-activates when your request matches. No manual registration needed.
+**Invoke:** Roo indexes all skills at startup and auto-activates when your request matches. No manual registration
+needed.
 
 [Roo Code skills docs](https://docs.roocode.com/features/skills)
 
 ### Amp
 
-| Scope   | Path                            |
-|---------|---------------------------------|
-| Project | `.agents/skills/x-agent/`      |
+| Scope   | Path                      |
+|---------|---------------------------|
+| Project | `.agents/skills/x-agent/` |
 
 [Amp skills docs](https://ampcode.com/manual#agent-skills)
 
@@ -255,7 +276,9 @@ This skill follows the [agentskills.io](https://agentskills.io) open standard. E
 
 ### Other Agents
 
-For any other [agentskills.io](https://agentskills.io)-compatible agent, place the skill directory where the agent discovers skills (typically `~/.agents/skills/` globally or `.agents/skills/` per-project). Each `<cli>/SKILL.md` file is an entry point. The agent loads references and scripts on demand via progressive disclosure.
+For any other [agentskills.io](https://agentskills.io)-compatible agent, place the skill directory where the agent
+discovers skills (typically `~/.agents/skills/` globally or `.agents/skills/` per-project). Each `<cli>/SKILL.md` file
+is an entry point. The agent loads references and scripts on demand via progressive disclosure.
 
 ## License
 

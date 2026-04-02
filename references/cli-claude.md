@@ -17,8 +17,8 @@
 
 ## 3. Invocation Template
 
-| Mode | Command |
-|------|---------|
+| Mode           | Command                                                                |
+|----------------|------------------------------------------------------------------------|
 | **Validation** | `cat "$PROMPT_FILE" \| claude -p --model <model> --output-format text` |
 | **Delegation** | `cat "$PROMPT_FILE" \| claude -p --model <model> --output-format text` |
 
@@ -26,6 +26,6 @@ Note: Claude Code validation and delegation use the same invocation — no separ
 
 ## 4. Version Compatibility Matrix
 
-| Version | Print Flag | Model Flag | Output Format | Notes |
-|---------|------------|------------|---------------|-------|
-| 2.1.x | `-p` / `--print` | `--model` | `--output-format text\|json\|stream-json` | Current |
+| Version | Print Flag       | Model Flag | Output Format                             | Notes   |
+|---------|------------------|------------|-------------------------------------------|---------|
+| 2.1.x   | `-p` / `--print` | `--model`  | `--output-format text\|json\|stream-json` | Current |
