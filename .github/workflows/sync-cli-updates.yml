@@ -23,10 +23,7 @@ jobs:
             repo: anthropics/claude-code
           - cli: gemini
             repo: google-gemini/gemini-cli
-          - cli: cursor
-            repo: getcursor/cursor
-          - cli: junie
-            repo: JetBrains/junie-cli
+          # Cursor and Junie don't have public GitHub Releases — tracked via snapshot-diff only
     outputs:
       changed: ${{ steps.check.outputs.changed }}
     steps:
@@ -76,8 +73,10 @@ jobs:
           npm install -g @openai/codex 2>/dev/null || echo "SKIP: codex install failed"
           # Gemini CLI
           npm install -g @google/gemini-cli 2>/dev/null || echo "SKIP: gemini install failed"
-          # Cursor and Junie may not be npm-installable
-          echo "SKIP: cursor and junie require manual installation"
+          # Cursor Agent CLI
+          curl https://cursor.com/install -fsS | bash 2>/dev/null || echo "SKIP: cursor install failed"
+          # Junie CLI
+          curl -fsSL https://junie.jetbrains.com/install.sh | bash 2>/dev/null || echo "SKIP: junie install failed"
         continue-on-error: true
 
       - name: Run snapshot detection
