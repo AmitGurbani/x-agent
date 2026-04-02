@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files from prompt transport
+*.tmp
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Claude Code
+.claude/
