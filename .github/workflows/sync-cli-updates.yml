@@ -133,7 +133,7 @@ jobs:
           done
         continue-on-error: true
 
-      - name: Check for changes and create PRs
+      - name: Check for changes and create PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -148,34 +148,35 @@ jobs:
 
           # Determine which CLIs changed
           CHANGED_CLIS=$(git diff --name-only assets/ | sed 's|assets/||;s|-snapshot.txt||' | sort -u)
+          BRANCH="cli-update/weekly"
+
+          # Check for existing open PR
+          EXISTING=$(gh pr list --label "cli-update" --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          git checkout -B "$BRANCH" origin/"$DEFAULT_BRANCH"
 
           for CLI in $CHANGED_CLIS; do
-            BRANCH="cli-update/${CLI}"
-
-            # Check for existing PR (duplicate prevention — filter by head branch, not text search)
-            EXISTING=$(gh pr list --label "cli-update" --head "cli-update/${CLI}" --json number --jq '.[0].number' 2>/dev/null || echo "")
-
-            git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
             git add "assets/${CLI}-snapshot.txt"
-            git commit -m "chore: update ${CLI} CLI snapshot" || continue
-            git push origin "$BRANCH" --force-with-lease
+          done
 
-            if [ -n "$EXISTING" ]; then
-              echo "Existing PR #${EXISTING} updated for ${CLI}"
-            else
-              PR_BODY="## Summary
-          - Snapshot updated for \`${CLI}\`
+          CLI_LIST=$(echo "$CHANGED_CLIS" | tr '\n' ', ' | sed 's/,$//')
+          git commit -m "chore: update CLI snapshots for ${CLI_LIST}" || exit 0
+          git push origin "$BRANCH" --force
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updated existing PR #${EXISTING}"
+          else
+            PR_BODY="## Summary
+          Snapshots updated for: ${CLI_LIST}
 
           ## Action Required
-          - Review version matrix in \`references/cli-${CLI}.md\`
+          For each updated CLI:
+          - Review version matrix in \`references/cli-<name>.md\`
           - Check for new/changed CLI flags
           - Verify tier classification for any new models"
 
-              gh pr create \
-                --title "chore: update ${CLI} CLI snapshot" \
-                --body "$PR_BODY" \
-                --label "cli-update"
-            fi
-
-            git checkout "$DEFAULT_BRANCH"
-          done
+            gh pr create \
+              --title "chore: update CLI snapshots (${CLI_LIST})" \
+              --body "$PR_BODY" \
+              --label "cli-update"
+          fi
