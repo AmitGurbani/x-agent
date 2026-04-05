@@ -13,13 +13,28 @@
 
 set -euo pipefail
 
-# Detect timeout command (GNU timeout on Linux, gtimeout via coreutils on macOS)
+# Unified timeout wrapper: prefers GNU timeout/gtimeout, falls back to perl.
+# Usage: run_with_timeout <seconds> sh -c '...'
+# Returns the command's exit code, or 124 on timeout (matching GNU timeout).
 if command -v timeout &>/dev/null; then
-  TIMEOUT_CMD="timeout"
+  run_with_timeout() { timeout "$@"; }
 elif command -v gtimeout &>/dev/null; then
-  TIMEOUT_CMD="gtimeout"
+  run_with_timeout() { gtimeout "$@"; }
+elif command -v perl &>/dev/null; then
+  # Perl fallback for stock macOS: uses fork + process groups to avoid orphans.
+  run_with_timeout() {
+    perl -e '
+      my $t = shift;
+      my $pid = fork // die "fork: $!";
+      if (!$pid) { setpgrp(0,0); exec @ARGV; die "exec: $!"; }
+      $SIG{ALRM} = sub { kill "TERM", -$pid; };
+      alarm $t;
+      waitpid($pid, 0);
+      exit($? & 127 ? 124 : $? >> 8);
+    ' "$@"
+  }
 else
-  echo "Error: 'timeout' command not found. Install coreutils (brew install coreutils on macOS)." >&2
+  echo "Error: No timeout mechanism found. Install coreutils (brew install coreutils) or ensure perl is available." >&2
   exit 1
 fi
 
@@ -44,47 +59,47 @@ export MODEL PROMPT_FILE TIMEOUT
 case "$CLI_NAME" in
   codex)
     if [ "$MODE" = "delegation" ]; then
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | codex exec -m "$MODEL" --full-auto --ephemeral -'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | codex exec -m "$MODEL" --full-auto --ephemeral -'
     else
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | codex exec -m "$MODEL" --ephemeral -'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | codex exec -m "$MODEL" --ephemeral -'
     fi
     ;;
   cursor)
     if [ "$MODE" = "delegation" ]; then
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | agent -p --model "$MODEL" --trust'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | agent -p --model "$MODEL" --trust'
     else
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | agent -p --model "$MODEL"'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | agent -p --model "$MODEL"'
     fi
     ;;
   claude)
-    "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | claude -p --model "$MODEL" --output-format text'
+    run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | claude -p --model "$MODEL" --output-format text'
     ;;
   gemini)
     if [ "$MODE" = "delegation" ]; then
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | gemini -m "$MODEL" -p - -y -o text'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | gemini -m "$MODEL" -p - -y -o text'
     else
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | gemini -m "$MODEL" -p - -o text'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | gemini -m "$MODEL" -p - -o text'
     fi
     ;;
   junie)
     TIMEOUT_MS=$((TIMEOUT * 1000))
     export TIMEOUT_MS
-    "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | junie --model "$MODEL" --output-format text --timeout "$TIMEOUT_MS"'
+    run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | junie --model "$MODEL" --output-format text --timeout "$TIMEOUT_MS"'
     ;;
   qwen)
     # Qwen Code does not expose an internal --timeout flag; relies on external process kill.
     if [ "$MODE" = "delegation" ]; then
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | qwen --model "$MODEL" --yolo'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | qwen --model "$MODEL" --yolo'
     else
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | qwen --model "$MODEL"'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | qwen --model "$MODEL"'
     fi
     ;;
   antigravity)
     # Antigravity CLI does not expose an internal --timeout flag; relies on external process kill.
     if [ "$MODE" = "delegation" ]; then
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | antigravity chat --model "$MODEL" --yolo'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | antigravity chat --model "$MODEL" --yolo'
     else
-      "$TIMEOUT_CMD" "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | antigravity chat --model "$MODEL"'
+      run_with_timeout "$TIMEOUT" sh -c 'cat "$PROMPT_FILE" | antigravity chat --model "$MODEL"'
     fi
     ;;
   *)
