@@ -18,6 +18,8 @@ jobs:
       - name: Setup Bats and libraries
         id: setup-bats
         uses: bats-core/bats-action@4.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run BATS tests
         env:
@@ -50,6 +52,8 @@ jobs:
       - name: Setup Bats and libraries
         id: setup-bats
         uses: bats-core/bats-action@4.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run BATS tests
         env:
