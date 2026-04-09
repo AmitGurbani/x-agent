@@ -38,6 +38,9 @@ jobs:
           - cli: antigravity
             install: "npm install -g @antigravity/cli"
             repo: ""
+          - cli: opencode
+            install: "npm install -g opencode-ai"
+            repo: "anomalyco/opencode"
     steps:
       - uses: actions/checkout@v4
 
