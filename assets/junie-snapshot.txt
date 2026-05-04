@@ -1,5 +1,5 @@
 === VERSION ===
-Junie version: 1321.57
+Junie version: 1468.30
 
 === HELP ===
 Usage: junie [<options>] [<task>] 
@@ -47,6 +47,7 @@ System (non-interactive only):
 
 Misc:
   --guidelines-filename=<text>  
+  --ide-guidelines=<text>       Path to a file whose content will be prepended to the existing guidelines.
   --review                      Run a code review
   -h, --help                    Show this message and exit
 
@@ -59,6 +60,7 @@ Acp:
 
 Model:
   --model=<text>                    Model to use for the primary agent
+  --effort=<text>                   Effort level to use. Possible values: low, medium, high.
   --provider=<text>                 BYOK provider to use. Possible values: openai, anthropic, google, xai, openrouter, copilot. If not set, the Junie or Custom model provider is used.
   --model-default-locations=<text>  Enable or disable adding custom models from default locations (per user / per project).
   --model-location=<text>           Additional folders where custom models should be found. Can be specified multiple times.
@@ -86,4 +88,6 @@ Arguments:
   <task>  Task description (optional positional argument)
           Example: junie "Fix the bug in the login function"
 
-LAST_RELEASE=1375.1
+
+
+LAST_RELEASE=1570.1

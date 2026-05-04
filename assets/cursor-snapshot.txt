@@ -1,5 +1,5 @@
 === VERSION ===
-2026.04.08-a41fba1
+2026.05.01-eea359f
 
 === HELP ===
 Usage: agent [options] [command] [prompt...]
@@ -23,14 +23,12 @@ Options:
   --stream-partial-output      Stream partial output as individual text deltas
                                (only works with --print and stream-json format)
                                (default: false)
-  -c, --cloud                  Start in cloud mode (open composer picker on
-                               launch) (default: false)
   --mode <mode>                Start in the given execution mode. plan:
                                read-only/planning (analyze, propose plans, no
                                edits). ask: Q&A style for explanations and
                                questions (read-only). (choices: "plan", "ask")
   --plan                       Start in plan mode (shorthand for --mode=plan).
-                               Ignored if --cloud is passed. (default: false)
+                               (default: false)
   --resume [chatId]            Select a session to resume (default: false)
   --continue                   Continue previous session (default: false)
   --model <model>              Model to use (e.g., gpt-5, sonnet-4,
@@ -66,9 +64,9 @@ Commands:
                                disable browser opening.
   logout                       Sign out and clear stored authentication
   mcp                          Manage MCP servers
-  status|whoami                View authentication status
+  status|whoami [options]      View authentication status
   models                       List available models for this account
-  about                        Display version, system, and account information
+  about [options]              Display version, system, and account information
   update                       Update Cursor Agent to the latest version
   create-chat                  Create a new empty chat and return its ID
   generate-rule|rule           Generate a new Cursor rule with interactive
@@ -77,3 +75,4 @@ Commands:
   ls                           Resume a chat session
   resume                       Resume the latest chat session
   help [command]               Display help for command
+
