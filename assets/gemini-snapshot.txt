@@ -1,7 +1,11 @@
 === VERSION ===
-0.37.0
+Project registry at /home/runner/.gemini/projects.json has an invalid schema, resetting to empty.
+Project registry at /home/runner/.gemini/projects.json has an invalid schema, resetting to empty.
+0.58.0
 
 === HELP ===
+Project registry at /home/runner/.gemini/projects.json has an invalid schema, resetting to empty.
+Project registry at /home/runner/.gemini/projects.json has an invalid schema, resetting to empty.
 Usage: gemini [options] [command]
 
 Gemini CLI - Defaults to interactive mode. Use -p/--prompt for non-interactive (headless) mode.
@@ -11,6 +15,7 @@ Commands:
   gemini extensions <command>  Manage Gemini CLI extensions.  [aliases: extension]
   gemini skills <command>      Manage agent skills.  [aliases: skill]
   gemini hooks <command>       Manage Gemini CLI hooks.  [aliases: hook]
+  gemini gemma                 Manage local Gemma model routing
   gemini [query..]             Launch Gemini CLI  [default]
 
 Positionals:
@@ -21,6 +26,7 @@ Options:
   -m, --model                     Model  [string]
   -p, --prompt                    Run in non-interactive (headless) mode with the given prompt. Appended to input on stdin (if any).  [string]
   -i, --prompt-interactive        Execute the provided prompt and continue in interactive mode  [string]
+      --skip-trust                Trust the current workspace for this session.  [boolean] [default: false]
   -w, --worktree                  Start Gemini in a new git worktree. If no name is provided, one is generated automatically.  [string]
   -s, --sandbox                   Run in sandbox?  [boolean]
   -y, --yolo                      Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?  [boolean] [default: false]
@@ -34,6 +40,8 @@ Options:
   -e, --extensions                A list of extensions to use. If not provided, all extensions are used.  [array]
   -l, --list-extensions           List all available extensions and exit.  [boolean]
   -r, --resume                    Resume a previous session. Use "latest" for most recent or index number (e.g. --resume 5)  [string]
+      --session-file              Load a session from a JSON file  [string]
+      --session-id                Start a new session with a manually provided UUID.  [string]
       --list-sessions             List available sessions for the current project and exit.  [boolean]
       --delete-session            Delete a session by index number (use --list-sessions to see available sessions).  [string]
       --include-directories       Additional directories to include in the workspace (comma-separated or multiple --include-directories)  [array]
@@ -43,4 +51,6 @@ Options:
       --accept-raw-output-risk    Suppress the security warning when using --raw-output.  [boolean]
   -v, --version                   Show version number  [boolean]
   -h, --help                      Show help  [boolean]
-LAST_RELEASE=v0.37.0
+
+
+LAST_RELEASE=v0.58.0
