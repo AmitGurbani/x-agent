@@ -1,5 +1,5 @@
 === VERSION ===
-Junie version: 1321.57
+Junie version: 26.9.22 (3419.29)
 
 === HELP ===
 Usage: junie [<options>] [<task>] 
@@ -21,33 +21,48 @@ Non-interactive mode:   junie "Fix the bug in the login function"
                         junie --task "Fix the bug"
 
 Core:
-  --task=<text>         Task description (alternative to positional argument)
-  --session-id=<text>   Id of the previously executed session to follow up
-  --resume              Resume the last session (or the session specified by --session-id)
-  --brave               Turns on Brave Mode (interactive only)
-  --use-local-cache     Enable local AI caches even when config.hasLocalCache is false
-  -p, --project=<text>  Project directory (default: current directory)
+  --task=<text>                     Task description (alternative to positional argument)
+  --prompt=<text>                   Start interactive mode with an initial prompt already submitted
+  --system-prompt=<text>            Additional system prompt for the main agent
+  --plan                            Start interactive mode in Plan Mode
+  --session-id=<text>               Id or junie://sessions/<id> link of the previously executed session to follow up
+  --resume                          Resume the last session (or the session specified by --session-id)
+  --brave                           Turns on Brave Mode (interactive only)
+  --share-anonymous-statistics=<[true|false]>  Override sharing anonymous usage statistics for this run
+  --use-local-cache                 Enable local AI caches even when config.hasLocalCache is false
+  -p, --project=<text>              Project directory (default: current directory)
 
 Authentication:
   -a, --auth=<text>            Authentication token, visit https://junie.jetbrains.com/cli to generate a token.
   --openai-api-key=<text>      OpenAI API key.
   --anthropic-api-key=<text>   Anthropic API key.
   --grok-api-key=<text>        Grok API key.
+  --meta-api-key=<text>        Meta Model API key (Muse Spark models).
   --openrouter-api-key=<text>  OpenRouter API key.
   --google-api-key=<text>      Google API key.
+  --litellm-url=<text>         LiteLLM proxy base URL (e.g. http://localhost:4000). Used together with --litellm-api-key.
+  --litellm-api-key=<text>     LiteLLM proxy API key. Optional for self-hosted proxies that do not require authentication.
 
 System (non-interactive only):
-  --input-format=<text>      Input format: text or json
-  --output-format=<text>     Output format: text, json, json-stream
-  --json-output-file=<text>  The file where JSON output is written. If not specified, output is printed to stdout
-  -t, --timeout=<int>        Time limit in millis
-  -c, --cache-dir=<text>     Caching directory for Junie
-  --version                  Show version
-  --skip-update-check        Skip the automatic update check on startup. Useful for CI or automation
+  --input-format=<text>          Input format: text or json
+  --output-format=<text>         Output format: text, json, json-stream
+  --json-output-file=<text>      The file where JSON output is written. If not specified, output is printed to stdout
+  -c, --cache-dir=<text>         Caching directory for Junie
+  --version                      Show version
+  --gateway-status               Print status of the running Junie gateway (pid, host, port, work directory) and exit
+  --gateway-stop                 Stop the running Junie gateway if any (otherwise a no-op) and exit
+  --gateway                      Run Junie as a headless gateway worker that executes gateway commands (e.g. cron jobs) without any interactive UI
+  --verbose                      In --gateway mode, stream the transcript of every session to the process output; without it the gateway worker runs completely silently
+  --agent-mode=<(classic|chat)>  Initial agent mode (classic or chat) for newly created sessions
+  --skip-update-check            Skip the automatic update check on startup. Useful for CI or automation
 
 Misc:
   --guidelines-filename=<text>  
+  --ide-guidelines=<text>       Path to a file whose content will be prepended to the existing guidelines.
   --review                      Run a code review
+  --demo                        Run a visual demo of a feature using computer use
+  --demo-host                   Run demos directly on this machine instead of a Docker VM
+  --goal                        Run in orchestrated step-by-step mode
   -h, --help                    Show this message and exit
 
 Configuration:
@@ -59,7 +74,8 @@ Acp:
 
 Model:
   --model=<text>                    Model to use for the primary agent
-  --provider=<text>                 BYOK provider to use. Possible values: openai, anthropic, google, xai, openrouter, copilot. If not set, the Junie or Custom model provider is used.
+  --effort=<text>                   Effort level to use. Possible values: low, medium, high.
+  --provider=<text>                 BYOK provider to use. Possible values: openai, anthropic, google, xai, meta, openrouter, copilot, litellm. If not set, the Junie or Custom model provider is used.
   --model-default-locations=<text>  Enable or disable adding custom models from default locations (per user / per project).
   --model-location=<text>           Additional folders where custom models should be found. Can be specified multiple times.
 
@@ -83,7 +99,9 @@ Custom agents:
   --agent-location=<text>          Additional folders where agents should be found. Can be specified multiple times.
 
 Arguments:
-  <task>  Task description (optional positional argument)
+  <task>  Task description, or a junie://sessions/<id> link to follow up on (optional positional argument)
           Example: junie "Fix the bug in the login function"
 
-LAST_RELEASE=1375.1
+
+
+LAST_RELEASE=3644.1
